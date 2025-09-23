@@ -4,6 +4,7 @@ import useWeather from "./hooks/useWeather";
 
 function App() {
   const { fetchWeather } = useWeather();
+
   return (
     <>
       <h1 className={style.title}>Clima</h1>
