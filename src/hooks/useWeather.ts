@@ -1,6 +1,8 @@
 import axios from "axios";
 import { z } from "Zod";
+// import { object, string, number, type InferOutput, parse } from "valibot";
 import type { SearchType } from "../types";
+import { useMemo, useState } from "react";
 
 //Type Guards o Assertion
 // function isWeatherResponse(weather: unknown): weather is Weather {
@@ -24,9 +26,29 @@ const Weather = z.object({
   }),
 });
 
-type Weather = z.infer<typeof Weather>;
+export type Weather = z.infer<typeof Weather>;
+
+//Valibot
+// const WeatherSchema = object({
+//   name: string(),
+//   main: object({
+//     temp: number(),
+//     temp_min: number(),
+//     temp_max: number(),
+//   }),
+// });
+// type Weather = InferOutput<typeof WeatherSchema>;
 
 export default function useWeather() {
+  const [weather, setWeather] = useState<Weather>({
+    name: "",
+    main: {
+      temp: 0,
+      temp_max: 0,
+      temp_min: 0,
+    },
+  });
+
   const fetchWeather = async (search: SearchType) => {
     const appid = import.meta.env.VITE_API_KEY;
     try {
@@ -53,18 +75,26 @@ export default function useWeather() {
       //   }
 
       //Zod
+      //Zod tiene las desventaja que es muy pesado
       const { data: weatherResult } = await axios(weatherUrl);
       const result = Weather.safeParse(weatherResult);
-      console.log(result);
+
       if (result.success) {
-        console.log(result.data);
+        setWeather(result.data);
       }
+      //Valibot
+      // const { data: weatherResult } = await axios(weatherUrl);
+      // const result = parse(WeatherSchema, weatherResult);
     } catch (error) {
       console.log(error);
     }
   };
 
+  const hasWeatherDetail = useMemo(() => weather.name, [weather]);
+
   return {
+    weather,
     fetchWeather,
+    hasWeatherDetail,
   };
 }
